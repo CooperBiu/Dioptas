@@ -57,6 +57,7 @@ jobs:
         run: |
           pip install numpy==1.23.5
           pip install scipy==1.10.1
+          pip install qtpy==2.4.1
           pip install PyQt5==5.15.9
           pip install pyqtgraph==0.13.3
           pip install h5py==3.8.0
@@ -79,6 +80,22 @@ jobs:
         shell: pwsh
         run: |
           python -m pip check
+
+      - name: Create version file
+        working-directory: source
+        shell: pwsh
+        run: |
+          if (!(Test-Path "dioptas")) {
+              throw "dioptas directory not found"
+          }
+      
+          Set-Content -Path "dioptas/__version__" `
+            -Value "0.5.6" `
+            -NoNewline `
+            -Encoding ascii
+      
+          Write-Host "Version file created:"
+          Get-Content "dioptas/__version__"
 
       # 7. 编译 Cython
       - name: Compile Cython
