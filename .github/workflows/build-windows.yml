@@ -68,7 +68,7 @@ jobs:
           pip install lmfit==1.2.2
           pip install scikit-image==0.20.0
           pip install pycifrw
-          pip install watchdog
+          pip install watchdog==2.1.9
           pip install psutil
           pip install python-dateutil
           pip install matplotlib
