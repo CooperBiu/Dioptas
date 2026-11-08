@@ -110,12 +110,13 @@ jobs:
           python setup.py build_ext --inplace
 
       - name: Test source startup
+        timeout-minutes: 2
         working-directory: source
         shell: pwsh
         env:
           QT_QPA_PLATFORM: offscreen
         run: |
-          python Dioptas.py test
+          python -c "import sys, dioptas; dioptas.excepthook = sys.__excepthook__; sys.argv = ['Dioptas.py', 'test']; dioptas.main()"
           if ($LASTEXITCODE -ne 0) { throw "Source startup failed" }
 
       # 8. 使用官方 spec 打包
@@ -135,6 +136,7 @@ jobs:
           $process = Start-Process -FilePath $exe.FullName -ArgumentList "test" -WorkingDirectory $exe.DirectoryName -PassThru
           if (-not $process.WaitForExit(120000)) {
             $process.Kill()
+            Get-Content "$env:USERPROFILE/dioptas_error.log" -ErrorAction SilentlyContinue
             throw "Executable startup timed out"
           }
           if ($process.ExitCode -ne 0) { throw "Executable startup failed: $($process.ExitCode)" }
