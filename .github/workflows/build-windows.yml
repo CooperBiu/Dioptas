@@ -124,6 +124,7 @@ jobs:
         working-directory: source
         shell: pwsh
         run: |
+          python -c "from pathlib import Path; p=Path('Dioptas.spec'); p.write_text(p.read_text().replace('console=False', 'console=True'))"
           python -m PyInstaller --clean --noconfirm Dioptas.spec
 
       - name: Test Windows executable
@@ -133,12 +134,14 @@ jobs:
           QT_QPA_PLATFORM: offscreen
         run: |
           $exe = Get-Item "dist/Dioptas_Win64_0.5.6/Dioptas.exe"
-          $process = Start-Process -FilePath $exe.FullName -ArgumentList "test" -WorkingDirectory $exe.DirectoryName -PassThru
+          $process = Start-Process -FilePath $exe.FullName -ArgumentList "test" -WorkingDirectory $exe.DirectoryName -RedirectStandardOutput stdout.log -RedirectStandardError stderr.log -PassThru
           if (-not $process.WaitForExit(120000)) {
             $process.Kill()
+            Get-Content stdout.log, stderr.log -ErrorAction SilentlyContinue
             Get-Content "$env:USERPROFILE/dioptas_error.log" -ErrorAction SilentlyContinue
             throw "Executable startup timed out"
           }
+          Get-Content stdout.log, stderr.log -ErrorAction SilentlyContinue
           if ($process.ExitCode -ne 0) { throw "Executable startup failed: $($process.ExitCode)" }
 
       # 9. 上传编译结果
