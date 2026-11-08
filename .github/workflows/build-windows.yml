@@ -66,7 +66,7 @@ jobs:
           pip install pyFAI==2023.1.0
           pip install pandas==1.5.3
           pip install lmfit==1.2.2
-          pip install scikit-image==0.20.0
+          pip install scikit-image==0.19.3
           pip install pycifrw
           pip install watchdog==2.1.9
           pip install psutil
@@ -124,7 +124,6 @@ jobs:
         working-directory: source
         shell: pwsh
         run: |
-          python -c "from pathlib import Path; p=Path('Dioptas.spec'); p.write_text(p.read_text().replace('console=False', 'console=True'))"
           python -m PyInstaller --clean --noconfirm Dioptas.spec
 
       - name: Test Windows executable
