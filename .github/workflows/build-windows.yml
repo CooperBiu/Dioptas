@@ -73,6 +73,7 @@ jobs:
           pip install python-dateutil
           pip install matplotlib
           pip install sharedmem
+          pip install future extra_data PyOpenGL setuptools_scm==7.1.0
 
       # 6. 检查依赖
       - name: Check dependencies
@@ -94,6 +95,10 @@ jobs:
             -NoNewline `
             -Encoding ascii
       
+          Set-Content -Path "dioptas/version.py" `
+            -Value '__version__ = "0.5.6"' `
+            -Encoding ascii
+
           Write-Host "Version file created:"
           Get-Content "dioptas/__version__"
 
@@ -104,12 +109,35 @@ jobs:
         run: |
           python setup.py build_ext --inplace
 
+      - name: Test source startup
+        working-directory: source
+        shell: pwsh
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          python Dioptas.py test
+          if ($LASTEXITCODE -ne 0) { throw "Source startup failed" }
+
       # 8. 使用官方 spec 打包
       - name: Build Dioptas EXE
         working-directory: source
         shell: pwsh
         run: |
           python -m PyInstaller --clean --noconfirm Dioptas.spec
+
+      - name: Test Windows executable
+        working-directory: source
+        shell: pwsh
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          $exe = Get-Item "dist/Dioptas_Win64_0.5.6/Dioptas.exe"
+          $process = Start-Process -FilePath $exe.FullName -ArgumentList "test" -WorkingDirectory $exe.DirectoryName -PassThru
+          if (-not $process.WaitForExit(120000)) {
+            $process.Kill()
+            throw "Executable startup timed out"
+          }
+          if ($process.ExitCode -ne 0) { throw "Executable startup failed: $($process.ExitCode)" }
 
       # 9. 上传编译结果
       - name: Upload Windows EXE
